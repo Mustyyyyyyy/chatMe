@@ -4,12 +4,23 @@
     {
       "src": "server/src/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "mobile/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "web-build"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/server/src/server.js"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/mobile/web-build/$1"
     }
   ]
 }
