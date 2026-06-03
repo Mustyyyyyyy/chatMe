@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  username  String?  @unique
+  image     String?
+  createdAt DateTime @default(now())
+
+  messages  Message[]
+  chats     ChatUser[]
+  sessions  Session[]
+  feedbacks Feedback[]
+
+  contacts    Contact[] @relation("UserContacts")
+  contactedBy Contact[] @relation("ContactedBy")
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  users     ChatUser[]
+  messages  Message[]
+}
+
+model ChatUser {
+  id     String @id @default(cuid())
+  userId String
+  chatId String
+
+  user   User @relation(fields: [userId], references: [id])
+  chat   Chat @relation(fields: [chatId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String?
+  mediaUrl  String?
+  status    String   @default("sent") // sent | delivered | read
+  createdAt DateTime @default(now())
+
+  userId String
+  chatId String
+
+  user   User @relation(fields: [userId], references: [id])
+  chat   Chat @relation(fields: [chatId], references: [id])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  deviceInfo   String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String?  @db.VarChar(255)
+  subject   String?
+  category  String?
+  message   String
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  userId    String
+  contactId String
+  createdAt DateTime @default(now())
+
+  user    User @relation("UserContacts", fields: [userId], references: [id], onDelete: Cascade)
+  contact User @relation("ContactedBy", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactId])
+}
