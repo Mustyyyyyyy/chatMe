@@ -13,6 +13,7 @@ const userRoutes = require("./routes/userRoutes");
 const supportRoutes = require("./routes/supportRoutes");
 
 const app = express();
+const APP_URL = process.env.APP_URL || 'https://chat-ebon-nine-76.vercel.app';
 
 app.use(cors());
 app.use(express.json());
@@ -25,7 +26,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/support", supportRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "ChatMe server is running" });
+  res.json({ status: "ok", message: "ChatMe server is running", appUrl: APP_URL });
 });
 
 app.get("/support", (req, res) => {

@@ -3,13 +3,17 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
+export const APP_URL = 'https://chat-ebon-nine-76.vercel.app';
+
 export const getBackendUrl = () => {
   if (Platform.OS === 'web') {
-    // If running in browser and backend is on local port
-    return 'http://localhost:5000';
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+
+    return APP_URL;
   }
 
-  // Extract host IP from Expo's debugger address to connect from physical devices/emulators
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.developer?.tool;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
