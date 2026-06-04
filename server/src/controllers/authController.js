@@ -1,8 +1,10 @@
+const crypto = require("crypto");
 const sendOTPEmail = require("../utils/mailer");
-const { setOTP, getOTP, deleteOTP } = require("../utils/otpStore");
 const {
   generateAccessToken,
   generateRefreshToken,
+  generateOtpToken,
+  verifyOtpToken,
 } = require("../utils/jwt");
 
 const requestOTP = async (req, res) => {
@@ -14,8 +16,9 @@ const requestOTP = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+    const otpToken = generateOtpToken(email, otpHash);
 
-    setOTP(email, otp);
     console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
 
     let emailDeliveryFailed = false;
@@ -31,6 +34,7 @@ const requestOTP = async (req, res) => {
 
     return res.json({
       message: emailDeliveryFailed ? "OTP generated, email delivery failed" : "OTP sent to email",
+      otpToken,
     });
   } catch (error) {
     console.error("[AUTH] requestOTP error:", error?.message || error);
@@ -40,23 +44,28 @@ const requestOTP = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, otpToken } = req.body;
 
-    if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required" });
+    if (!email || !otp || !otpToken) {
+      return res.status(400).json({ message: "Email, OTP, and otpToken are required" });
     }
 
-    const stored = getOTP(email);
+    let tokenPayload;
+    try {
+      tokenPayload = verifyOtpToken(otpToken);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid or expired OTP token" });
+    }
 
-    if (!stored || stored.otp !== otp) {
+    if (tokenPayload.email !== email) {
+      return res.status(400).json({ message: "OTP token email mismatch" });
+    }
+
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    if (tokenPayload.otpHash !== otpHash) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
-
-    if (Date.now() > stored.expiresAt) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-
-    deleteOTP(email);
 
     const prisma = require("../utils/prisma");
 

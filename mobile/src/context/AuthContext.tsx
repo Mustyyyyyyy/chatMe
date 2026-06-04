@@ -18,8 +18,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   activeChatId: string | null;
-  requestOtp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, otp: string) => Promise<void>;
+  requestOtp: (email: string) => Promise<string>;
+  verifyOtp: (email: string, otp: string, otpToken: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (name: string, username: string, image: string | null) => Promise<void>;
   setActiveChatId: (chatId: string | null) => void;
@@ -89,11 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   const requestOtp = async (email: string) => {
-    await api.post('/auth/request-otp', { email });
+    const response = await api.post('/auth/request-otp', { email });
+    return response.data?.otpToken;
   };
 
-  const verifyOtp = async (email: string, otp: string) => {
-    const response = await api.post('/auth/verify-otp', { email, otp });
+  const verifyOtp = async (email: string, otp: string, otpToken: string) => {
+    const response = await api.post('/auth/verify-otp', { email, otp, otpToken });
     const { user: loggedInUser, accessToken } = response.data;
 
     setUser(loggedInUser);

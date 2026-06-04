@@ -19,6 +19,7 @@ export default function LoginScreen() {
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [otpToken, setOtpToken] = useState<string | null>(null);
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +33,15 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
-      await requestOtp(email.trim().toLowerCase());
+      const token = await requestOtp(email.trim().toLowerCase());
+      if (!token) {
+        throw new Error('OTP token is missing');
+      }
+      setOtpToken(token);
       setSuccessMsg('OTP code sent successfully!');
       setStep('otp');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -50,9 +55,12 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
-      await verifyOtp(email.trim().toLowerCase(), otp);
+      if (!otpToken) {
+        throw new Error('OTP token missing. Please request a new code.');
+      }
+      await verifyOtp(email.trim().toLowerCase(), otp, otpToken);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid OTP code. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Invalid OTP code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -161,6 +169,7 @@ export default function LoginScreen() {
                 onPress={() => {
                   setStep('email');
                   setOtp('');
+                  setOtpToken(null);
                   setError(null);
                   setSuccessMsg(null);
                 }}
