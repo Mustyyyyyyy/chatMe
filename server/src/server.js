@@ -25,6 +25,11 @@ app.use("/api/media", mediaRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/support", supportRoutes);
 
+app.use((err, req, res, next) => {
+  console.error("[SERVER] Unhandled error:", err?.message || err);
+  res.status(500).json({ message: "Internal server error" });
+});
+
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "ChatMe server is running", appUrl: APP_URL });
 });

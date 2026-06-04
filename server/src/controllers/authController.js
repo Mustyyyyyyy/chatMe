@@ -7,27 +7,41 @@ const {
 } = require("../utils/jwt");
 
 const requestOTP = async (req, res) => {
-  const { email } = req.body;
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  setOTP(email, otp);
-
-  console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
-
   try {
-    await sendOTPEmail(email, otp);
-  } catch (error) {
-    console.error(`[AUTH] Failed to send OTP email to ${email}:`, error.message);
-  }
+    const { email } = req.body;
 
-  res.json({ message: "OTP sent to email" });
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    setOTP(email, otp);
+
+    console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
+
+    try {
+      await sendOTPEmail(email, otp);
+    } catch (error) {
+      console.error(`[AUTH] Failed to send OTP email to ${email}:`, error?.message || error);
+    }
+
+    return res.json({ message: "OTP sent to email" });
+  } catch (error) {
+    console.error("[AUTH] requestOTP error:", error?.message || error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const verifyOTP = async (req, res) => {
-  const { email, otp } = req.body;
+  try {
+    const { email, otp } = req.body;
 
-  const stored = getOTP(email);
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const stored = getOTP(email);
 
   if (!stored || stored.otp !== otp) {
     return res.status(400).json({ message: "Invalid OTP" });
