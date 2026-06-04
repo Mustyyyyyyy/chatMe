@@ -4,18 +4,16 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^5.17.0"
-  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "prisma": "^5.17.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",

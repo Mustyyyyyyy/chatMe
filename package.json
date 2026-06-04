@@ -5,6 +5,7 @@
     "server"
   ],
   "scripts": {
-    "build": "npm --workspace mobile run build"
+    "build": "npm --workspace mobile run build",
+    "postinstall": "npm --workspaces run postinstall"
   }
 }
