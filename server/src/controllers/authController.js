@@ -1,4 +1,3 @@
-const prisma = require("../utils/prisma");
 const sendOTPEmail = require("../utils/mailer");
 const { setOTP, getOTP, deleteOTP } = require("../utils/otpStore");
 const {
@@ -43,41 +42,47 @@ const verifyOTP = async (req, res) => {
 
     const stored = getOTP(email);
 
-  if (!stored || stored.otp !== otp) {
-    return res.status(400).json({ message: "Invalid OTP" });
-  }
+    if (!stored || stored.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
 
-  if (Date.now() > stored.expiresAt) {
-    return res.status(400).json({ message: "OTP expired" });
-  }
+    if (Date.now() > stored.expiresAt) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
 
-  deleteOTP(email);
+    deleteOTP(email);
 
-  let user = await prisma.user.findUnique({ where: { email } });
+    const prisma = require("../utils/prisma");
 
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email },
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email },
+      });
+    }
+
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshToken,
+        deviceInfo: req.headers["user-agent"] || "unknown",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     });
-  }
 
-  const accessToken = generateAccessToken(user.id);
-  const refreshToken = generateRefreshToken(user.id);
-
-  await prisma.session.create({
-    data: {
-      userId: user.id,
+    res.json({
+      user,
+      accessToken,
       refreshToken,
-      deviceInfo: req.headers["user-agent"] || "unknown",
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  res.json({
-    user,
-    accessToken,
-    refreshToken,
-  });
+    });
+  } catch (error) {
+    console.error("[AUTH] verifyOTP error:", error?.message || error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 module.exports = { requestOTP, verifyOTP };
