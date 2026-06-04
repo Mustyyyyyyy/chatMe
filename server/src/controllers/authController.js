@@ -16,16 +16,22 @@ const requestOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     setOTP(email, otp);
-
     console.log(`[AUTH] Generated OTP for ${email}: ${otp}`);
 
+    let emailDeliveryFailed = false;
     try {
       await sendOTPEmail(email, otp);
     } catch (error) {
+      emailDeliveryFailed = true;
       console.error(`[AUTH] Failed to send OTP email to ${email}:`, error?.message || error);
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[AUTH] Dev OTP for ${email}: ${otp}`);
+      }
     }
 
-    return res.json({ message: "OTP sent to email" });
+    return res.json({
+      message: emailDeliveryFailed ? "OTP generated, email delivery failed" : "OTP sent to email",
+    });
   } catch (error) {
     console.error("[AUTH] requestOTP error:", error?.message || error);
     return res.status(500).json({ message: "Internal server error" });
