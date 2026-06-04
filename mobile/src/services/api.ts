@@ -14,14 +14,7 @@ export const getBackendUrl = () => {
     return APP_URL;
   }
 
-  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.developer?.tool;
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    return `http://${ip}:5000`;
-  }
-
-  // Fallbacks
-  return Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+  return APP_URL;
 };
 
 export const BACKEND_URL = getBackendUrl();
@@ -46,7 +39,6 @@ export const getAuthToken = async (): Promise<string | null> => {
   }
 };
 
-// Attach Authorization header if token exists in SecureStore
 api.interceptors.request.use(
   async (config) => {
     try {
