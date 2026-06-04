@@ -19,8 +19,12 @@
       "dest": "/server/src/server.js"
     },
     {
+      "src": "^/$",
+      "dest": "/index.html"
+    },
+    {
       "src": "^/(.*)$",
-      "dest": "/mobile/web-build/$1"
+      "dest": "/$1"
     }
   ]
 }

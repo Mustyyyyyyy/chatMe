@@ -41,7 +41,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "build": "expo export:web --output-dir ./web-build",
+    "build": "expo export --platform web --output-dir ./web-build",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
