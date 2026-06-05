@@ -49,6 +49,7 @@ app.get("/privacy", (req, res) => {
 if (require.main === module) {
   const server = http.createServer(app);
   const io = new Server(server, {
+    path: '/api/socket.io',
     cors: { origin: "*" },
   });
 

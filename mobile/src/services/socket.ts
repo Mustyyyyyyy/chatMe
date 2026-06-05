@@ -15,7 +15,8 @@ export const connectSocket = (userId: string): Socket => {
   }
 
   socket = io(BACKEND_URL, {
-    transports: ['websocket'],
+    path: '/api/socket.io',
+    transports: ['polling', 'websocket'],
     autoConnect: true,
   });
 
